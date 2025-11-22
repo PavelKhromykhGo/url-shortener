@@ -1,0 +1,81 @@
+package httpapi
+
+import (
+	"net/http"
+	"time"
+
+	"github.com/PavelKhromykhGo/url-shortener/internal/logger"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+)
+
+type Deps struct {
+	Logger logger.Logger
+}
+
+func NewRouter(d Deps) http.Handler {
+	r := chi.NewRouter()
+
+	r.Use(middleware.RequestID)
+
+	r.Use(middleware.RealIP)
+
+	r.Use(middleware.Recoverer)
+
+	r.Use(NewLoggingMiddleware(d.Logger))
+
+	r.Get("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("ok"))
+	})
+
+	r.Handle("/metrics", promhttp.Handler())
+
+	r.Route("/api/v1", func(api chi.Router) {
+		api.Get("/_placeholder", func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusNotImplemented)
+			_, _ = w.Write([]byte(`{"error":"not implemented yet"}`))
+		})
+	})
+	return r
+}
+
+func NewLoggingMiddleware(log logger.Logger) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			start := time.Now()
+
+			lrw := &loggingResponseWriter{
+				ResponseWriter: w,
+				statusCode:     http.StatusOK,
+			}
+
+			next.ServeHTTP(lrw, r)
+
+			duration := time.Since(start)
+
+			reqID := middleware.GetReqID(r.Context())
+
+			log.Info("http request",
+				logger.String("request_id", reqID),
+				logger.String("method", r.Method),
+				logger.String("url", r.URL.Path),
+				logger.Int("status", lrw.statusCode),
+				logger.String("remote_addr", r.RemoteAddr),
+				logger.String("user_agent", r.UserAgent()),
+				logger.String("duration", duration.String()),
+			)
+		})
+	}
+}
+
+type loggingResponseWriter struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func (lrw *loggingResponseWriter) WriteHeader(code int) {
+	lrw.statusCode = code
+	lrw.ResponseWriter.WriteHeader(code)
+}
