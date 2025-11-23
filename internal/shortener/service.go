@@ -8,6 +8,8 @@ import (
 	"github.com/PavelKhromykhGo/url-shortener/internal/logger"
 )
 
+var ErrNotFound = fmt.Errorf("link not found")
+
 type Link struct {
 	ID          int64
 	OwnerID     int64
