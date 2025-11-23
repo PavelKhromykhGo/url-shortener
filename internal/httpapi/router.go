@@ -4,14 +4,17 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/PavelKhromykhGo/url-shortener/internal/httpapi/handlers"
 	"github.com/PavelKhromykhGo/url-shortener/internal/logger"
+	"github.com/PavelKhromykhGo/url-shortener/internal/shortener"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type Deps struct {
-	Logger logger.Logger
+	Logger           logger.Logger
+	ShortenerService shortener.Service
 }
 
 func NewRouter(d Deps) http.Handler {
@@ -33,10 +36,11 @@ func NewRouter(d Deps) http.Handler {
 	r.Handle("/metrics", promhttp.Handler())
 
 	r.Route("/api/v1", func(api chi.Router) {
-		api.Get("/_placeholder", func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(http.StatusNotImplemented)
-			_, _ = w.Write([]byte(`{"error":"not implemented yet"}`))
-		})
+		shortenHandler := handlers.NewShortenHandler(
+			d.ShortenerService,
+			d.Logger,
+		)
+		api.Post("/shorten", shortenHandler.CreateLink)
 	})
 	return r
 }
