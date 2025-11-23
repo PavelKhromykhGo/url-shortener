@@ -34,7 +34,7 @@ func main() {
 		logger.String("env", cfg.Env),
 		logger.String("addr", cfg.HTTPAddr))
 
-	pgPool, err := pgxpool.New(ctx, cfg.PostgresDNS)
+	pgPool, err := pgxpool.New(ctx, cfg.PostgresDSN)
 	if err != nil {
 		logg.Fatal("failed to connect to postgres", logger.Error(err))
 	}

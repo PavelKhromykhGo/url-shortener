@@ -10,7 +10,7 @@ import (
 type Config struct {
 	Env              string
 	HTTPAddr         string
-	PostgresDNS      string
+	PostgresDSN      string
 	RedisAddr        string
 	RedisDB          int
 	RedisPassword    string
@@ -23,7 +23,7 @@ func Load() (*Config, error) {
 	cfg := &Config{
 		Env:              getEnv("APP_ENV", "dev"),
 		HTTPAddr:         getEnv("HTTP_ADDR", ":8080"),
-		PostgresDNS:      getEnv("POSTGRES_DNS", ""),
+		PostgresDSN:      getEnv("POSTGRES_DSN", ""),
 		RedisAddr:        getEnv("REDIS_ADDR", "localhost:6379"),
 		RedisDB:          getEnvInt("REDIS_DB", 0),
 		RedisPassword:    getEnv("REDIS_PASSWORD", ""),
@@ -32,8 +32,8 @@ func Load() (*Config, error) {
 		BaseURL:          getEnv("BASE_URL", "http://localhost:8080"),
 	}
 
-	if cfg.PostgresDNS == "" {
-		return nil, fmt.Errorf("POSTGRES_DNS is required")
+	if cfg.PostgresDSN == "" {
+		return nil, fmt.Errorf("POSTGRES_DSN is required")
 	}
 	if len(cfg.KafkaBrokers) == 0 {
 		return nil, fmt.Errorf("KAFKA_BROKERS is required")
