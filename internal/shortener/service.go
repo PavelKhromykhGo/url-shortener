@@ -80,10 +80,6 @@ func (s *service) CreateShortLink(ctx context.Context, ownerID int64, originalUR
 		return nil, fmt.Errorf("create link: %w", err)
 	}
 
-	if err = s.cfg.LinksRepo.CreateLink(ctx, link); err != nil {
-		return nil, fmt.Errorf("create link: %w", err)
-	}
-
 	if s.cfg.LinkCache != nil {
 		if err = s.cfg.LinkCache.SetByCode(ctx, link, 24*time.Hour); err != nil {
 			s.cfg.Logger.Warn("failed to cache link after create",
