@@ -15,6 +15,7 @@ import (
 	"github.com/PavelKhromykhGo/url-shortener/internal/logger"
 	"github.com/PavelKhromykhGo/url-shortener/internal/shortener"
 	"github.com/PavelKhromykhGo/url-shortener/internal/storage/postgres"
+	redisstore "github.com/PavelKhromykhGo/url-shortener/internal/storage/redis"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -47,12 +48,27 @@ func main() {
 
 	linksRepo := postgres.NewLinksRepository(pgPool)
 
+	rdb := redisstore.NewClient(cfg.RedisAddr, cfg.RedisDB, cfg.RedisPassword)
+	defer func() {
+		if err := rdb.Close(); err != nil {
+			logg.Warn("failed to close redis client", logger.Error(err))
+		}
+	}()
+
+	var linkCache shortener.LinkCache
+	if err := rdb.Ping(ctx).Err(); err != nil {
+		logg.Warn("failed to ping redis", logger.Error(err))
+		linkCache = nil
+	} else {
+		linkCache = redisstore.NewLinkCache(rdb)
+	}
+
 	idGen := id.NewRandomGenerator(8)
 
 	shortenerService := shortener.NewService(shortener.Config{
 		BaseURL:   cfg.BaseURL,
 		LinksRepo: linksRepo,
-		LinkCache: nil,
+		LinkCache: linkCache,
 		IDGen:     idGen,
 		Logger:    logg,
 	})
