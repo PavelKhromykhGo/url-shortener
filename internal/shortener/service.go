@@ -2,13 +2,14 @@ package shortener
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/PavelKhromykhGo/url-shortener/internal/logger"
 )
 
-var ErrNotFound = fmt.Errorf("link not found")
+var ErrNotFound = errors.New("link not found")
 
 type Link struct {
 	ID          int64
