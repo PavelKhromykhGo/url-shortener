@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/PavelKhromykhGo/url-shortener/internal/shortener"
-	goredis "github.com/redis/go-redis"
+	goredis "github.com/redis/go-redis/v9"
 )
 
 func NewClient(addr string, db int, password string) *goredis.Client {
@@ -40,7 +40,7 @@ func linkNotFoundKey(domain, code string) string {
 func (c *LinkCache) GetByCode(ctx context.Context, domain, code string) (*shortener.Link, error) {
 	key := linkKey(domain, code)
 
-	data, err := c.client.Get(key).Bytes()
+	data, err := c.client.Get(ctx, key).Bytes()
 	if err != nil {
 		if errors.Is(err, goredis.Nil) {
 			return nil, nil
@@ -63,10 +63,10 @@ func (c *LinkCache) SetByCode(ctx context.Context, link *shortener.Link, ttl tim
 		return err
 	}
 
-	return c.client.Set(key, data, ttl).Err()
+	return c.client.Set(ctx, key, data, ttl).Err()
 }
 
 func (c *LinkCache) SetNotFound(ctx context.Context, domain, code string, ttl time.Duration) error {
 	key := linkNotFoundKey(domain, code)
-	return c.client.Set(key, "1", ttl).Err()
+	return c.client.Set(ctx, key, "1", ttl).Err()
 }
