@@ -42,6 +42,11 @@ func NewRouter(d Deps) http.Handler {
 		)
 		api.Post("/shorten", shortenHandler.CreateLink)
 	})
+	redirectHandler := handlers.NewRedirectHandler(
+		d.ShortenerService,
+		d.Logger,
+	)
+	r.Get("/{code}", redirectHandler.Redirect)
 	return r
 }
 

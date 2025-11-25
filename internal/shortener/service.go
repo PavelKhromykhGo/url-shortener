@@ -132,7 +132,7 @@ func (s *service) ResolveLink(ctx context.Context, domain, code string) (*Link, 
 }
 
 func (s *service) BuildShortURL(link *Link) string {
-	return fmt.Sprintf("%s%s", link.Domain, link.ShortCode)
+	return fmt.Sprintf("%s/%s", link.Domain, link.ShortCode)
 }
 
 func isLinkUsable(link *Link) bool {
