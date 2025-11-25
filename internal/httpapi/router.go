@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/PavelKhromykhGo/url-shortener/internal/httpapi/handlers"
+	"github.com/PavelKhromykhGo/url-shortener/internal/kafka"
 	"github.com/PavelKhromykhGo/url-shortener/internal/logger"
 	"github.com/PavelKhromykhGo/url-shortener/internal/shortener"
 	"github.com/go-chi/chi/v5"
@@ -15,6 +16,7 @@ import (
 type Deps struct {
 	Logger           logger.Logger
 	ShortenerService shortener.Service
+	ClicksProducer   kafka.ClickProducer
 }
 
 func NewRouter(d Deps) http.Handler {
@@ -44,6 +46,7 @@ func NewRouter(d Deps) http.Handler {
 	})
 	redirectHandler := handlers.NewRedirectHandler(
 		d.ShortenerService,
+		d.ClicksProducer,
 		d.Logger,
 	)
 	r.Get("/{code}", redirectHandler.Redirect)
