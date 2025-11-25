@@ -12,6 +12,7 @@ import (
 	"github.com/PavelKhromykhGo/url-shortener/internal/httpapi"
 	"github.com/PavelKhromykhGo/url-shortener/internal/httpserver"
 	"github.com/PavelKhromykhGo/url-shortener/internal/id"
+	"github.com/PavelKhromykhGo/url-shortener/internal/kafka"
 	"github.com/PavelKhromykhGo/url-shortener/internal/logger"
 	"github.com/PavelKhromykhGo/url-shortener/internal/shortener"
 	"github.com/PavelKhromykhGo/url-shortener/internal/storage/postgres"
@@ -62,6 +63,16 @@ func main() {
 	} else {
 		linkCache = redisstore.NewLinkCache(rdb)
 	}
+
+	clickProducer, err := kafka.NewClickProducer(cfg.KafkaBrokers, cfg.KafkaClicksTopic, logg)
+	if err != nil {
+		logg.Fatal("failed to create kafka producer", logger.Error(err))
+	}
+	defer func() {
+		if err := clickProducer.Close(); err != nil {
+			logg.Warn("failed to close kafka producer", logger.Error(err))
+		}
+	}()
 
 	idGen := id.NewRandomGenerator(8)
 
