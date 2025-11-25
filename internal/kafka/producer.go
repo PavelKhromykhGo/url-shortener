@@ -1,0 +1,105 @@
+package kafka
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"strconv"
+	"time"
+
+	"github.com/PavelKhromykhGo/url-shortener/internal/logger"
+	"github.com/google/uuid"
+	kafkago "github.com/segmentio/kafka-go"
+)
+
+type ClickEvent struct {
+	SchemaVersion int32     `json:"schema_version"`
+	EventType     string    `json:"event_type"`
+	EventID       string    `json:"event_id"`
+	LinkID        int64     `json:"link_id"`
+	ShortCode     string    `json:"short_code"`
+	ClickedAt     time.Time `json:"clicked_at"`
+	UserAgent     string    `json:"user_agent,omitempty"`
+	Referer       string    `json:"referer,omitempty"`
+	IP            string    `json:"ip,omitempty"`
+}
+
+func NewClickEvent(linkID int64, shortCode, userAgent, referer, ip string, clickedAt time.Time) ClickEvent {
+	return ClickEvent{
+		SchemaVersion: 1,
+		EventType:     "click",
+		EventID:       uuid.New().String(),
+		LinkID:        linkID,
+		ShortCode:     shortCode,
+		ClickedAt:     clickedAt.UTC(),
+		UserAgent:     userAgent,
+		Referer:       referer,
+		IP:            ip,
+	}
+
+}
+
+type ClickProducer interface {
+	PublishClick(ctx context.Context, event ClickEvent) error
+	Close() error
+}
+
+type clickProducer struct {
+	writer *kafkago.Writer
+	logger logger.Logger
+}
+
+func (p clickProducer) PublishClick(ctx context.Context, event ClickEvent) error {
+	data, err := json.Marshal(event)
+	if err != nil {
+		return fmt.Errorf("marshal click event: %w", err)
+	}
+
+	key := []byte(strconv.FormatInt(event.LinkID, 10))
+
+	msg := kafkago.Message{
+		Key:   key,
+		Value: data,
+	}
+
+	if err := p.writer.WriteMessages(ctx, msg); err != nil {
+		p.logger.Error("failed to publish click event to kafka",
+			logger.Error(err),
+			logger.Int64("link_id", event.LinkID),
+			logger.String("short_code", event.ShortCode),
+		)
+		return err
+	}
+
+	p.logger.Debug("click event published to kafka",
+		logger.Int64("link_id", event.LinkID),
+		logger.String("short_code", event.ShortCode),
+	)
+	return nil
+}
+
+func (p clickProducer) Close() error {
+	return p.writer.Close()
+}
+
+func NewClickProducer(brokers []string, topic string, log logger.Logger) (ClickProducer, error) {
+	if len(brokers) == 0 {
+		return nil, fmt.Errorf("no kafka brokers provided")
+	}
+	if topic == "" {
+		return nil, fmt.Errorf("no kafka topic provided")
+	}
+
+	w := &kafkago.Writer{
+		Addr:         kafkago.TCP(brokers...),
+		Topic:        topic,
+		Balancer:     &kafkago.Hash{},
+		RequiredAcks: kafkago.RequireAll,
+		Async:        false,
+	}
+
+	return &clickProducer{
+		writer: w,
+		logger: log,
+	}, nil
+}
