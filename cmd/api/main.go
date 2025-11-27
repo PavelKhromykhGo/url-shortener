@@ -87,6 +87,7 @@ func main() {
 	deps := httpapi.Deps{
 		Logger:           logg,
 		ShortenerService: shortenerService,
+		ClicksProducer:   clickProducer,
 	}
 
 	router := httpapi.NewRouter(deps)
