@@ -12,15 +12,22 @@ import (
 type Repository interface {
 	InsertClickEvent(ctx context.Context, event kafka.ClickEvent) error
 	IncrementDailyStat(ctx context.Context, linkID int64, date time.Time) error
+	GetDailyStats(ctx context.Context, linkID int64, from, to time.Time) ([]DailyStat, error)
 }
 
 type Service interface {
 	ProcessClick(ctx context.Context, event kafka.ClickEvent) error
+	GetDailyStats(ctx context.Context, linkID int64, from, to time.Time) ([]DailyStat, error)
 }
 
 type service struct {
 	repo   Repository
 	logger logger.Logger
+}
+
+type DailyStat struct {
+	Date  time.Time
+	Count int64
 }
 
 func NewService(repo Repository, logger logger.Logger) Service {
@@ -47,4 +54,20 @@ func (s *service) ProcessClick(ctx context.Context, event kafka.ClickEvent) erro
 	)
 
 	return nil
+}
+
+func (s *service) GetDailyStats(ctx context.Context, linkID int64, from, to time.Time) ([]DailyStat, error) {
+	fromDay := from.UTC().Truncate(24 * time.Hour)
+	toDay := to.UTC().Truncate(24 * time.Hour)
+
+	if toDay.Before(fromDay) {
+		return nil, fmt.Errorf("invalid date range: to %v is before from %v", toDay, fromDay)
+	}
+
+	stats, err := s.repo.GetDailyStats(ctx, linkID, fromDay, toDay)
+	if err != nil {
+		return nil, fmt.Errorf("get daily stats: %w", err)
+	}
+
+	return stats, nil
 }
