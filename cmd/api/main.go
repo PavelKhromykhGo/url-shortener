@@ -8,6 +8,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/PavelKhromykhGo/url-shortener/internal/analytics"
 	"github.com/PavelKhromykhGo/url-shortener/internal/config"
 	"github.com/PavelKhromykhGo/url-shortener/internal/httpapi"
 	"github.com/PavelKhromykhGo/url-shortener/internal/httpserver"
@@ -48,6 +49,7 @@ func main() {
 	}
 
 	linksRepo := postgres.NewLinksRepository(pgPool)
+	analyticsRepo := postgres.NewAnalyticsRepository(pgPool)
 
 	rdb := redisstore.NewClient(cfg.RedisAddr, cfg.RedisDB, cfg.RedisPassword)
 	defer func() {
@@ -76,6 +78,7 @@ func main() {
 
 	idGen := id.NewRandomGenerator(8)
 
+	analyticsService := analytics.NewService(analyticsRepo, logg)
 	shortenerService := shortener.NewService(shortener.Config{
 		BaseURL:   cfg.BaseURL,
 		LinksRepo: linksRepo,
@@ -88,6 +91,7 @@ func main() {
 		Logger:           logg,
 		ShortenerService: shortenerService,
 		ClicksProducer:   clickProducer,
+		AnalyticsService: analyticsService,
 	}
 
 	router := httpapi.NewRouter(deps)
