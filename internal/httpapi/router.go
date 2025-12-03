@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/PavelKhromykhGo/url-shortener/internal/analytics"
 	"github.com/PavelKhromykhGo/url-shortener/internal/httpapi/handlers"
 	"github.com/PavelKhromykhGo/url-shortener/internal/kafka"
 	"github.com/PavelKhromykhGo/url-shortener/internal/logger"
@@ -17,6 +18,7 @@ type Deps struct {
 	Logger           logger.Logger
 	ShortenerService shortener.Service
 	ClicksProducer   kafka.ClickProducer
+	AnalyticsService analytics.Service
 }
 
 func NewRouter(d Deps) http.Handler {
@@ -43,6 +45,11 @@ func NewRouter(d Deps) http.Handler {
 			d.Logger,
 		)
 		api.Post("/shorten", shortenHandler.CreateLink)
+		statsHandler := handlers.NewStatsHandler(
+			d.AnalyticsService,
+			d.Logger,
+		)
+		api.Get("/links/{id}/stats/daily", statsHandler.GetDailyStats)
 	})
 	redirectHandler := handlers.NewRedirectHandler(
 		d.ShortenerService,
