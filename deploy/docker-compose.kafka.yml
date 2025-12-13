@@ -1,4 +1,3 @@
-version: '3.8'
 # docker-compose -f deploy/docker-compose.kafka.yml up -d
 services:
   zookeeper:
