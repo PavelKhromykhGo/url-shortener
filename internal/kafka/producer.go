@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/PavelKhromykhGo/url-shortener/internal/logger"
+	"github.com/PavelKhromykhGo/url-shortener/metrics"
 	"github.com/google/uuid"
 	kafkago "github.com/segmentio/kafka-go"
 )
@@ -63,6 +64,7 @@ func (p clickProducer) PublishClick(ctx context.Context, event ClickEvent) error
 	}
 
 	if err := p.writer.WriteMessages(ctx, msg); err != nil {
+		metrics.KafkaProducerErrorsTotal.WithLabelValues(p.writer.Topic).Inc()
 		p.logger.Error("failed to publish click event to kafka",
 			logger.Error(err),
 			logger.Int64("link_id", event.LinkID),
@@ -70,6 +72,8 @@ func (p clickProducer) PublishClick(ctx context.Context, event ClickEvent) error
 		)
 		return err
 	}
+
+	metrics.KafkaProducerPublishedTotal.WithLabelValues(p.writer.Topic).Inc()
 
 	p.logger.Debug("click event published to kafka",
 		logger.Int64("link_id", event.LinkID),
