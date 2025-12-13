@@ -30,6 +30,8 @@ func NewRouter(d Deps) http.Handler {
 
 	r.Use(middleware.Recoverer)
 
+	r.Use(MetricsMiddleware)
+
 	r.Use(NewLoggingMiddleware(d.Logger))
 
 	r.Get("/healthz", func(w http.ResponseWriter, r *http.Request) {
