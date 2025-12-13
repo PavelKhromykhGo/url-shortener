@@ -18,6 +18,7 @@ import (
 	"github.com/PavelKhromykhGo/url-shortener/internal/shortener"
 	"github.com/PavelKhromykhGo/url-shortener/internal/storage/postgres"
 	redisstore "github.com/PavelKhromykhGo/url-shortener/internal/storage/redis"
+	"github.com/PavelKhromykhGo/url-shortener/metrics"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -36,6 +37,8 @@ func main() {
 	logg.Info("starting api server",
 		logger.String("env", cfg.Env),
 		logger.String("addr", cfg.HTTPAddr))
+
+	metrics.MustInit("api")
 
 	pgPool, err := pgxpool.New(ctx, cfg.PostgresDSN)
 	if err != nil {
