@@ -10,3 +10,10 @@ CREATE TABLE IF NOT EXISTS links (
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_links_domain_code ON links(domain, short_code);
+
+CREATE TABLE click_stats_daily (
+    link_id BIGINT NOT NULL REFERENCES links(id) ON DELETE CASCADE,
+    date DATE NOT NULL,
+    count BIGINT NOT NULL DEFAULT 0,
+    PRIMARY KEY (link_id, date)
+);
