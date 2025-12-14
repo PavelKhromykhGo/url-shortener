@@ -9,6 +9,7 @@ import (
 	"github.com/PavelKhromykhGo/url-shortener/internal/logger"
 )
 
+// Config controls HTTP server settings and dependencies.
 type Config struct {
 	Addr         string
 	Handler      http.Handler
@@ -18,11 +19,13 @@ type Config struct {
 	Logger       logger.Logger
 }
 
+// Server wraps http.Server to expose lifecycle helpers with logging.
 type Server struct {
 	srv    *http.Server
 	logger logger.Logger
 }
 
+// New builds a Server using the provided configuration.
 func New(cfg Config) *Server {
 	return &Server{
 		srv: &http.Server{
@@ -36,6 +39,7 @@ func New(cfg Config) *Server {
 	}
 }
 
+// Start begins listening for HTTP requests.
 func (s *Server) Start() error {
 	s.logger.Info("http server started", logger.String("addr", s.srv.Addr))
 
@@ -47,6 +51,7 @@ func (s *Server) Start() error {
 	return nil
 }
 
+// Stop gracefully shuts down the HTTP server using the supplied context deadline.
 func (s *Server) Stop(ctx context.Context) error {
 	s.logger.Info("http server stopping")
 

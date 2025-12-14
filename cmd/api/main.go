@@ -1,3 +1,4 @@
+// Command api launches the HTTP API server for the URL shortener service.
 package main
 
 import (

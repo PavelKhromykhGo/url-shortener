@@ -12,6 +12,7 @@ var (
 	Error  = zap.Error
 )
 
+// Logger is a simple logging interface.
 type Logger interface {
 	Debug(msg string, fields ...Field)
 	Info(msg string, fields ...Field)
@@ -20,10 +21,12 @@ type Logger interface {
 	Fatal(msg string, fields ...Field)
 }
 
+// zapLogger is an implementation of Logger using zap.
 type zapLogger struct {
 	l *zap.Logger
 }
 
+// New creates a new Logger based on the environment.
 func New(env string) Logger {
 	var (
 		l   *zap.Logger

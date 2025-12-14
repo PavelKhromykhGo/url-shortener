@@ -11,11 +11,13 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+// DailyStatItem represents a single day's aggregated click count.
 type DailyStatItem struct {
 	Date  string `json:"date"`
 	Count int64  `json:"count"`
 }
 
+// DailyStatsResponse wraps the range and click counts returned by the analytics service.
 type DailyStatsResponse struct {
 	LinkID int64           `json:"link_id"`
 	From   string          `json:"from"`
@@ -23,11 +25,13 @@ type DailyStatsResponse struct {
 	Items  []DailyStatItem `json:"items"`
 }
 
+// StatsHandler serves analytics requests for links.
 type StatsHandler struct {
 	analyticsService analytics.Service
 	logger           logger.Logger
 }
 
+// NewStatsHandler constructs a handler that delegates analytics retrieval to the provided service.
 func NewStatsHandler(analyticsService analytics.Service, logger logger.Logger) *StatsHandler {
 	return &StatsHandler{
 		analyticsService: analyticsService,
@@ -35,6 +39,7 @@ func NewStatsHandler(analyticsService analytics.Service, logger logger.Logger) *
 	}
 }
 
+// GetDailyStats returns click counts grouped by day for the requested link and date range.
 func (h *StatsHandler) GetDailyStats(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 

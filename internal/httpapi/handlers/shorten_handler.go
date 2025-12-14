@@ -9,10 +9,12 @@ import (
 	"github.com/PavelKhromykhGo/url-shortener/internal/shortener"
 )
 
+// ShortenRequest represents payload for creating a new short link.
 type ShortenRequest struct {
 	URL string `json:"url"`
 }
 
+// ShortenResponse describes the response containing the generated short link details.
 type ShortenResponse struct {
 	ID          string `json:"id"`
 	ShortCode   string `json:"short_code"`
@@ -20,11 +22,13 @@ type ShortenResponse struct {
 	OriginalURL string `json:"original_url"`
 }
 
+// ShortenHandler handles creation of shortened URLs.
 type ShortenHandler struct {
 	service shortener.Service
 	logger  logger.Logger
 }
 
+// NewShortenHandler constructs a handler that delegates short link creation to the provided service.
 func NewShortenHandler(service shortener.Service, logger logger.Logger) *ShortenHandler {
 	return &ShortenHandler{
 		service: service,
@@ -32,6 +36,7 @@ func NewShortenHandler(service shortener.Service, logger logger.Logger) *Shorten
 	}
 }
 
+// CreateLink creates a new short URL from the provided JSON payload and returns its details.
 func (h *ShortenHandler) CreateLink(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 

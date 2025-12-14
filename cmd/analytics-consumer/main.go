@@ -1,3 +1,4 @@
+// Command analytics-consumer streams click events from Kafka and stores analytics in PostgreSQL.
 package main
 
 import (

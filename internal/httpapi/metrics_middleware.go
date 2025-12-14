@@ -9,22 +9,27 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+// statusWriter wraps http.ResponseWriter to capture the status code.
 type statusWriter struct {
 	http.ResponseWriter
 	status int
 }
 
+// WriteHeader captures the status code and delegates to the underlying ResponseWriter.
 func (w *statusWriter) WriteHeader(code int) {
 	w.status = code
 	w.ResponseWriter.WriteHeader(code)
 }
 
+// MetricsMiddleware collects HTTP metrics for incoming requests.
 type MetricsMiddleware struct{}
 
+// NewMetricsMiddleware constructs a MetricsMiddleware instance.
 func NewMetricsMiddleware() *MetricsMiddleware {
 	return &MetricsMiddleware{}
 }
 
+// Handler wraps the next http.Handler to collect metrics.
 func (m *MetricsMiddleware) Handler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
@@ -47,6 +52,7 @@ func (m *MetricsMiddleware) Handler(next http.Handler) http.Handler {
 	})
 }
 
+// routePattern extracts the route pattern from the request context.
 func routePattern(r *http.Request) string {
 	if rc := chi.RouteContext(r.Context()); rc != nil {
 		if p := rc.RoutePattern(); p != "" {

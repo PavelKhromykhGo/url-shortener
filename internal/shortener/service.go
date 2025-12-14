@@ -11,6 +11,7 @@ import (
 
 var ErrNotFound = errors.New("link not found")
 
+// Link represents a shortened URL link.
 type Link struct {
 	ID          int64
 	OwnerID     int64
@@ -22,21 +23,25 @@ type Link struct {
 	CreatedAt   time.Time
 }
 
+// Repository defines the interface for link storage.
 type Repository interface {
 	CreateLink(ctx context.Context, link *Link) error
 	GetByCode(ctx context.Context, domain, code string) (*Link, error)
 }
 
+// LinkCache defines the interface for link caching.
 type LinkCache interface {
 	GetByCode(ctx context.Context, domain, code string) (*Link, error)
 	SetByCode(ctx context.Context, link *Link, ttl time.Duration) error
 	SetNotFound(ctx context.Context, domain, code string, ttl time.Duration) error
 }
 
+// IDGenerator defines the interface for generating short codes.
 type IDGenerator interface {
 	GenerateShortCode() (string, error)
 }
 
+// Config holds the configuration for the shortener service.
 type Config struct {
 	BaseURL   string
 	LinksRepo Repository
@@ -45,20 +50,24 @@ type Config struct {
 	Logger    logger.Logger
 }
 
+// Service defines the interface for the shortener service.
 type Service interface {
 	CreateShortLink(ctx context.Context, ownerID int64, originalURL string) (*Link, error)
 	ResolveLink(ctx context.Context, domain, code string) (*Link, error)
 	BuildShortURL(link *Link) string
 }
 
+// service is the implementation of the Service interface.
 type service struct {
 	cfg Config
 }
 
+// NewService creates a new shortener service.
 func NewService(cfg Config) Service {
 	return &service{cfg: cfg}
 }
 
+// CreateShortLink creates a new shortened link.
 func (s *service) CreateShortLink(ctx context.Context, ownerID int64, originalURL string) (*Link, error) {
 	code, err := s.cfg.IDGen.GenerateShortCode()
 	if err != nil {
@@ -93,6 +102,7 @@ func (s *service) CreateShortLink(ctx context.Context, ownerID int64, originalUR
 	return link, nil
 }
 
+// ResolveLink resolves a shortened link by its code.
 func (s *service) ResolveLink(ctx context.Context, domain, code string) (*Link, error) {
 	if s.cfg.LinkCache != nil {
 		link, err := s.cfg.LinkCache.GetByCode(ctx, domain, code)
@@ -131,10 +141,12 @@ func (s *service) ResolveLink(ctx context.Context, domain, code string) (*Link, 
 	return link, nil
 }
 
+// BuildShortURL constructs the full short URL from a Link.
 func (s *service) BuildShortURL(link *Link) string {
 	return fmt.Sprintf("%s/%s", link.Domain, link.ShortCode)
 }
 
+// isLinkUsable checks if a link is active and not expired.
 func isLinkUsable(link *Link) bool {
 	if !link.IsActive {
 		return false

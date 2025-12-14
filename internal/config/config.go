@@ -7,6 +7,7 @@ import (
 	"strings"
 )
 
+// Config represents application settings loaded from environment variables.
 type Config struct {
 	Env              string
 	HTTPAddr         string
@@ -19,6 +20,7 @@ type Config struct {
 	BaseURL          string
 }
 
+// Load builds Config from environment variables, applying defaults where applicable and validating required fields.
 func Load() (*Config, error) {
 	cfg := &Config{
 		Env:              getEnv("APP_ENV", "dev"),
@@ -45,6 +47,7 @@ func Load() (*Config, error) {
 	return cfg, nil
 }
 
+// getEnv retrieves the value of the environment variable named by the key.
 func getEnv(key, def string) string {
 	if val, ok := os.LookupEnv(key); ok {
 		return val
@@ -52,6 +55,7 @@ func getEnv(key, def string) string {
 	return def
 }
 
+// getEnvInt retrieves the integer value of the environment variable named by the key.
 func getEnvInt(key string, def int) int {
 	valStr, ok := os.LookupEnv(key)
 	if !ok || valStr == "" {
@@ -65,6 +69,7 @@ func getEnvInt(key string, def int) int {
 	return v
 }
 
+// splitComma splits a comma-separated string into a slice of trimmed strings.
 func splitComma(s string) []string {
 	if s == "" {
 		return nil

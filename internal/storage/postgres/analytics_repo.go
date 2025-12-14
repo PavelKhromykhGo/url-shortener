@@ -9,10 +9,12 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// AnalyticsRepository is the Postgres implementation of the analytics.Repository interface.
 type AnalyticsRepository struct {
 	pool *pgxpool.Pool
 }
 
+// NewAnalyticsRepository creates a new instance of AnalyticsRepository.
 func NewAnalyticsRepository(pool *pgxpool.Pool) *AnalyticsRepository {
 	return &AnalyticsRepository{pool: pool}
 }
@@ -39,6 +41,7 @@ WHERE link_id = $1 AND date >= $2 AND date <= $3
 ORDER BY date
 `
 
+// InsertClickEvent inserts a click event into the database.
 func (r *AnalyticsRepository) InsertClickEvent(ctx context.Context, event kafka.ClickEvent) error {
 	_, err := r.pool.Exec(ctx, insertClickEventQuery,
 		event.EventID,
@@ -51,6 +54,7 @@ func (r *AnalyticsRepository) InsertClickEvent(ctx context.Context, event kafka.
 	return err
 }
 
+// IncrementDailyStat increments the daily click count for a given link and date.
 func (r *AnalyticsRepository) IncrementDailyStat(ctx context.Context, linkID int64, date time.Time) error {
 	_, err := r.pool.Exec(ctx, incrementDailyStstQuery,
 		linkID,
@@ -59,6 +63,7 @@ func (r *AnalyticsRepository) IncrementDailyStat(ctx context.Context, linkID int
 	return err
 }
 
+// GetDailyStats retrieves daily click statistics for a given link within a date range.
 func (r *AnalyticsRepository) GetDailyStats(ctx context.Context, linkID int64, from, to time.Time) ([]analytics.DailyStat, error) {
 	rows, err := r.pool.Query(ctx, getClickEventQuery,
 		linkID,

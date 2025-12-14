@@ -9,10 +9,12 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// LinksRepository is the Postgres implementation of the shortener.Repository interface.
 type LinksRepository struct {
 	pool *pgxpool.Pool
 }
 
+// NewLinksRepository creates a new instance of LinksRepository.
 func NewLinksRepository(pool *pgxpool.Pool) *LinksRepository {
 	return &LinksRepository{pool: pool}
 }
@@ -29,6 +31,7 @@ FROM links
 WHERE domain = $1 AND short_code = $2
 `
 
+// CreateLink inserts a new link into the database.
 func (r *LinksRepository) CreateLink(ctx context.Context, link *shortener.Link) error {
 	row := r.pool.QueryRow(ctx, insertLinkQuery,
 		link.OwnerID,
@@ -44,6 +47,7 @@ func (r *LinksRepository) CreateLink(ctx context.Context, link *shortener.Link) 
 	return nil
 }
 
+// GetByCode retrieves a link by its domain and short code.
 func (r *LinksRepository) GetByCode(ctx context.Context, domain, code string) (*shortener.Link, error) {
 	var link shortener.Link
 	row := r.pool.QueryRow(ctx, getByCodeQuery, domain, code)

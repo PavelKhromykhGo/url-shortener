@@ -21,6 +21,7 @@ var (
 	KafkaConsumerLagSeconds      *prometheus.HistogramVec
 )
 
+// MustInit initializes and registers the Prometheus metrics.
 func MustInit(serviceName string) {
 	once.Do(func() {
 		HTTPRequestsTotal = prometheus.NewCounterVec(

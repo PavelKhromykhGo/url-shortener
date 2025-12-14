@@ -2,6 +2,7 @@ package metrics
 
 import "github.com/prometheus/client_golang/prometheus"
 
+// APIMetrics holds Prometheus metrics for the API.
 type APIMetrics struct {
 	InFlight prometheus.GaugeVec
 
@@ -15,6 +16,7 @@ type APIMetrics struct {
 	KafkaProduceDuration *prometheus.HistogramVec
 }
 
+// NewAPIMetrics creates and registers API metrics with the given Prometheus registerer.
 func NewAPIMetrics(req prometheus.Registerer) *APIMetrics {
 	m := &APIMetrics{
 		InFlight: *prometheus.NewGaugeVec(

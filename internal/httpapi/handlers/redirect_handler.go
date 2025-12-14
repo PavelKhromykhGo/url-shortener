@@ -13,12 +13,14 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+// RedirectHandler resolves short codes and redirects users to original URLs while emitting click events.
 type RedirectHandler struct {
 	service        shortener.Service
 	clicksProducer kafka.ClickProducer
 	logger         logger.Logger
 }
 
+// NewRedirectHandler constructs a redirect handler using the provided services.
 func NewRedirectHandler(service shortener.Service, clicksProducer kafka.ClickProducer, logger logger.Logger) *RedirectHandler {
 	return &RedirectHandler{
 		service:        service,
@@ -27,6 +29,7 @@ func NewRedirectHandler(service shortener.Service, clicksProducer kafka.ClickPro
 	}
 }
 
+// Redirect resolves a short code and issues an HTTP redirect, logging and publishing the click event.
 func (h *RedirectHandler) Redirect(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 

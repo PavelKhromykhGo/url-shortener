@@ -13,6 +13,7 @@ import (
 	kafkago "github.com/segmentio/kafka-go"
 )
 
+// ClickEvent represents a click event for a shortened URL.
 type ClickEvent struct {
 	SchemaVersion int32     `json:"schema_version"`
 	EventType     string    `json:"event_type"`
@@ -25,6 +26,7 @@ type ClickEvent struct {
 	IP            string    `json:"ip,omitempty"`
 }
 
+// NewClickEvent creates a new ClickEvent with the provided details.
 func NewClickEvent(linkID int64, shortCode, userAgent, referer, ip string, clickedAt time.Time) ClickEvent {
 	return ClickEvent{
 		SchemaVersion: 1,
@@ -40,16 +42,19 @@ func NewClickEvent(linkID int64, shortCode, userAgent, referer, ip string, click
 
 }
 
+// ClickProducer defines the interface for publishing click events to Kafka.
 type ClickProducer interface {
 	PublishClick(ctx context.Context, event ClickEvent) error
 	Close() error
 }
 
+// clickProducer is an implementation of ClickProducer using Kafka.
 type clickProducer struct {
 	writer *kafkago.Writer
 	logger logger.Logger
 }
 
+// PublishClick publishes a click event to Kafka.
 func (p clickProducer) PublishClick(ctx context.Context, event ClickEvent) error {
 	data, err := json.Marshal(event)
 	if err != nil {
@@ -82,10 +87,12 @@ func (p clickProducer) PublishClick(ctx context.Context, event ClickEvent) error
 	return nil
 }
 
+// Close closes the Kafka writer.
 func (p clickProducer) Close() error {
 	return p.writer.Close()
 }
 
+// NewClickProducer creates a new ClickProducer with the given Kafka brokers and topic.
 func NewClickProducer(brokers []string, topic string, log logger.Logger) (ClickProducer, error) {
 	if len(brokers) == 0 {
 		return nil, fmt.Errorf("no kafka brokers provided")
