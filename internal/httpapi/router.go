@@ -30,7 +30,8 @@ func NewRouter(d Deps) http.Handler {
 
 	r.Use(middleware.Recoverer)
 
-	r.Use(MetricsMiddleware)
+	mm := NewMetricsMiddleware()
+	r.Use(mm.Handler)
 
 	r.Use(NewLoggingMiddleware(d.Logger))
 

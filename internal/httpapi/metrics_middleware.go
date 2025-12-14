@@ -19,19 +19,31 @@ func (w *statusWriter) WriteHeader(code int) {
 	w.ResponseWriter.WriteHeader(code)
 }
 
-func MetricsMiddleware(next http.Handler) http.Handler {
+type MetricsMiddleware struct{}
+
+func NewMetricsMiddleware() *MetricsMiddleware {
+	return &MetricsMiddleware{}
+}
+
+func (m *MetricsMiddleware) Handler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
+
+		route := routePattern(r)
+		method := r.Method
+
+		metrics.HTTPInFlight.WithLabelValues(method, route).Inc()
+		defer metrics.HTTPInFlight.WithLabelValues(method, route).Dec()
 
 		sw := &statusWriter{ResponseWriter: w, status: http.StatusOK}
 		next.ServeHTTP(sw, r)
 
-		route := routePattern(r)
-		method := r.Method
-		status := strconv.Itoa(sw.status)
+		duration := time.Since(start).Seconds()
 
-		metrics.HTTPRequestsTotal.WithLabelValues(method, route, status).Inc()
-		metrics.HTTPRequestDuration.WithLabelValues(method, route, status).Observe(time.Since(start).Seconds())
+		statusStr := strconv.Itoa(sw.status)
+
+		metrics.HTTPRequestsTotal.WithLabelValues(method, route, statusStr).Inc()
+		metrics.HTTPRequestDuration.WithLabelValues(method, route, statusStr).Observe(duration)
 	})
 }
 

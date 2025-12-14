@@ -11,6 +11,7 @@ var (
 
 	HTTPRequestsTotal   *prometheus.CounterVec
 	HTTPRequestDuration *prometheus.HistogramVec
+	HTTPInFlight        *prometheus.GaugeVec
 
 	KafkaProducerPublishedTotal *prometheus.CounterVec
 	KafkaProducerErrorsTotal    *prometheus.CounterVec
@@ -43,6 +44,17 @@ func MustInit(serviceName string) {
 				Buckets: prometheus.DefBuckets,
 			},
 			[]string{"method", "route", "status"},
+		)
+
+		HTTPInFlight = prometheus.NewGaugeVec(
+			prometheus.GaugeOpts{
+				Name: "http_in_flight_requests",
+				Help: "Number of in-flight HTTP requests",
+				ConstLabels: prometheus.Labels{
+					"service": serviceName,
+				},
+			},
+			[]string{"method", "route"},
 		)
 
 		KafkaProducerPublishedTotal = prometheus.NewCounterVec(
@@ -105,6 +117,7 @@ func MustInit(serviceName string) {
 		prometheus.MustRegister(
 			HTTPRequestsTotal,
 			HTTPRequestDuration,
+			HTTPInFlight,
 			KafkaProducerPublishedTotal,
 			KafkaProducerErrorsTotal,
 			KafkaConsumerProcessedTotal,
