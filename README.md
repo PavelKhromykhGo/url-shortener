@@ -32,25 +32,13 @@
 
 ## Быстрый старт через Docker Compose
 
-1. Проверьте файл `.env.docker` (уже в репозитории) и при необходимости поправьте значения. По умолчанию там заданы переменные
-   для работы всего стека в Docker:
-   ```env
-   APP_ENV=dev
-   HTTP_ADDR=:8080
-   POSTGRES_DSN=postgres://postgres:postgres@postgres:5432/url_shortener?sslmode=disable
-   BASE_URL=http://localhost:8080
-   REDIS_ADDR=redis:6379
-   REDIS_DB=0
-   REDIS_PASSWORD=
-   KAFKA_BROKERS=kafka:9092
-   KAFKA_CLICKS_TOPIC=clicks
-   KAFKA_CLICKS_CONSUMER_GROUP=clicks-analytics-consumer
-   METRICS_ADDR=:9091
-   ```
-2. Запустите стек:
-   ```bash
-   docker compose -f deploy/docker-compose.yml up -d --build
-   ```
+## Quick start
+
+```bash
+git clone https://github.com/PavelKhromykhGo/url-shortener
+cd url-shortener
+docker compose -f deploy/docker-compose.yml up -d --build
+```
    Compose поднимет PostgreSQL, Redis, Kafka, применит миграции, запустит API, консюмер аналитики и мониторинг (Prometheus и Grafana).
 
 После старта API доступен на `http://localhost:8080`, метрики консюмера — на `http://localhost:9091/metrics`, Grafana — на `http://localhost:3000` (логин/пароль `admin/admin`).
