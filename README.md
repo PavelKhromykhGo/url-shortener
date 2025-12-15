@@ -37,7 +37,7 @@
 ```bash
 git clone https://github.com/PavelKhromykhGo/url-shortener
 cd url-shortener
-docker compose -f deploy/docker-compose.yml up -d --build
+docker-compose -f deploy/docker-compose.yml up -d --build
 ```
    Compose поднимет PostgreSQL, Redis, Kafka, применит миграции, запустит API, консюмер аналитики и мониторинг (Prometheus и Grafana).
 
